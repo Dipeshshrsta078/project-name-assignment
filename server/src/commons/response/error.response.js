@@ -7,7 +7,7 @@
 
 const errorResponse = (res, msg = "", options = {}) => {
   const status = +options.status || 400;
-  return res.status(status).json({ error: msg });
+  return res.json({ status, error: msg });
 };
 
 module.exports = errorResponse;

@@ -1,2 +1,3 @@
-const taskArray = [];
+let taskArray = [];
+
 module.exports = { taskArray };

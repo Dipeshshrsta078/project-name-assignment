@@ -1,6 +1,6 @@
-const { taskArray } = require("../commons/dbhelper");
 const { v4: uuidv4 } = require("uuid");
 const Response = require("../commons/response");
+let { taskArray } = require("../commons/dbhelper");
 /**
 
  * This function gets all the tasks
@@ -9,9 +9,13 @@ const Response = require("../commons/response");
  * @param {function} next function to call next middleware
  */
 async function findAllTasks(req, res, next) {
-  console.log("================================", taskArray);
   try {
-    Response.successResponse(res, "Get tasks success", taskArray);
+    res.json({
+      success: true,
+      status: 200,
+      msg: "get task success",
+      data: taskArray,
+    });
   } catch (err) {
     console.log(err);
     next(err);
@@ -27,16 +31,14 @@ async function findAllTasks(req, res, next) {
 async function create(req, res, next) {
   let task = req.body;
   try {
-    console.log("creating new task");
     task.id = uuidv4();
     if (taskArray.includes(task.title)) {
       return Response.errorResponse(res, "Task already exists!!");
     }
     task.createdAt = Date.now();
     task.updatedAt = Date.now();
-    const newTask = await taskArray.push(task, userModel);
+    const newTask = taskArray.push(task);
     const msg = "Task created successfully";
-    console.log(msg);
     return Response.successResponse(res, msg, newTask);
   } catch (err) {
     console.log(err);
@@ -55,19 +57,16 @@ async function update(req, res, next) {
   const taskId = req.params.id;
   const updateData = req.body;
   try {
-    const isExistinTask = await taskArray.find(item => {
-      item.id === taskId;
-    });
-    if (!isExistinTask) {
+    const existingTaskIndex = taskArray.findIndex(item => item.id === taskId);
+    if (existingTaskIndex === -1) {
       return Response.errorResponse(res, "Task doesnot exists!!");
     }
-    console.log(`updating task with id:${taskId}`);
-    const newTask = await taskArray.forEach(element => {
-      if (element.id === taskId) {
-        element = updateData;
-      }
-    });
-    Response.successResponse(res, `update task success.`, newTask);
+    taskArray[existingTaskIndex] = {
+      ...taskArray[existingTaskIndex],
+      ...updateData,
+    };
+
+    Response.successResponse(res, `update task success.`, taskArray);
   } catch (err) {
     console.log(err);
     next(err);
@@ -82,11 +81,13 @@ async function update(req, res, next) {
  */
 
 async function findById(req, res, next) {
-  const id = req.params.id;
+  const taskId = req.params.id;
   try {
-    const task = await taskArray.find(item => item.id === id);
+    const task = taskArray.find(item => item.id === taskId);
+    if (!task) {
+      return Response.errorResponse(res, "Task doesnot exists!!");
+    }
     const msg = "Get task by id success!!";
-    console.log(msg);
     Response.successResponse(res, msg, task);
   } catch (err) {
     console.log(err);
@@ -104,16 +105,15 @@ async function findById(req, res, next) {
 async function deleteOne(req, res, next) {
   const taskId = req.params.id;
   try {
-    const userData = await taskArray.pop(taskId, userModel, {
-      isDeleted: false,
-    });
-    if (!userData) {
+    const taskIndex = taskArray.findIndex(item => item.id === taskId);
+    if (taskIndex === -1) {
       return Response.errorResponse(res, "Task not found");
     }
-    await userService.deleteOne(taskId, userData);
+    console.log(121212, taskIndex, taskArray);
+    taskArray.splice(taskIndex, 1);
+
     const msg = "Delete task success!!";
-    console.log(msg);
-    Response.successResponse(res, msg);
+    Response.successResponse(res, msg, taskArray);
   } catch (err) {
     console.log(err);
     next(err);
