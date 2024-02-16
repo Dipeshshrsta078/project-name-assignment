@@ -1,11 +1,15 @@
 // Main starting file
 const express = require("express");
+const cors = require("cors");
+
 const app = express();
 const infoChecker = require("./commons/middlewares/infoChecker");
 const config = require("./config");
 const router = require("./routes");
 const errorHandler = require("./handlers/error/error.handler");
 
+// cors
+app.use(cors());
 // Middlewares
 app.use(express.static(__dirname)); // built-in middleware
 // third party middlewares
