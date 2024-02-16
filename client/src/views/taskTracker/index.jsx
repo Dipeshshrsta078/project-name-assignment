@@ -1,30 +1,46 @@
 import { Box, Card, Container, Paper, Stack, Typography } from "@mui/material";
 import { TaskList } from "../../components/TaskList";
 import { TaskForm } from "../../components/TaskForm";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
+import { baseUrl } from "../../App";
 
-const baseUrl = "http:localhost:4000"
 export const TaskTracker = () => {
+  /*  states  */
   const [inputText, setInputText] = useState("");
+  const [editItemId, setEditItemId] = useState("");
+
   const [tasks, setTasks] = useState([]);
   const [status, setStatus] = useState("All");
   const [filteredTasks, setFilteredTasks] = useState([]);
 
+  /* API call */
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await axios.get(`${baseUrl}/tasks`);
+      setTasks(response?.data?.data);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
+  }, [tasks]);
+
   useEffect(() => {
-    getLocalTasks();
+    fetchData();
   }, []);
 
   useEffect(() => {
     handleFilter();
     saveLocalTasks();
   }, [tasks, status]);
+
+  /* Event handlers */
   const handleFilter = () => {
     switch (status) {
       case "completed":
-        setFilteredTasks(tasks.filter((task) => task.completed === true));
+        setFilteredTasks(tasks.filter((task) => task.status === true));
         break;
-      case "uncompleted":
-        setFilteredTasks(tasks.filter((task) => task.completed === false));
+      case "incomplete":
+        setFilteredTasks(tasks.filter((task) => task.status === false));
         break;
       default:
         setFilteredTasks(tasks);
@@ -33,44 +49,37 @@ export const TaskTracker = () => {
   const saveLocalTasks = () => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   };
-  const getLocalTasks = () => {
-    if (localStorage.getItem("tasks") === null) {
-      localStorage.setItem("tasks", JSON.stringify([]));
-    } else {
-      let localTask = JSON.parse(localStorage.getItem("tasks"));
-      setTasks(localTask);
-    }
-  };
 
   return (
-    <Box
-      component="span"
-      sx={{ display: "inline-block", mx: "2px", transform: "scale(0.8)" }}
-    >
+    <Box>
       <Card
         sx={{
           bgcolor: "#f4f4f4",
-          maxWidth: "80%",
-          height: "80vh",
+          maxWidth: "750px",
           p: 2,
-          minWidth: 768,
+          margin: '40px auto'
         }}
       >
         <Stack spacing={2}>
-          <Typography variant="h3">Task tracker Management</Typography>
+          <Typography variant="h3">Task Tracker Management</Typography>
           <TaskForm
             inputText={inputText}
             tasks={tasks}
+            editItemId={editItemId}
+            setEditItemId={setEditItemId}
             setTasks={setTasks}
             setInputText={setInputText}
+            setFilteredTasks={setFilteredTasks}
             status={status}
             setStatus={setStatus}
           />
           <TaskList
             tasks={tasks}
             setTasks={setTasks}
+            setEditItemId={setEditItemId}
             setStatus={setStatus}
             filteredTasks={filteredTasks}
+            setFilteredTasks={setFilteredTasks}
             setInputText={setInputText}
           />
         </Stack>

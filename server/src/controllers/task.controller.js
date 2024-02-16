@@ -32,9 +32,10 @@ async function create(req, res, next) {
   let task = req.body;
   try {
     task.id = uuidv4();
-    if (taskArray.includes(task.title)) {
-      return Response.errorResponse(res, "Task already exists!!");
+    if (task.title === "") {
+      return Response.errorResponse(res, "Task cannot be empty.");
     }
+
     task.createdAt = Date.now();
     task.updatedAt = Date.now();
     const newTask = taskArray.push(task);
@@ -66,7 +67,7 @@ async function update(req, res, next) {
       ...updateData,
     };
 
-    Response.successResponse(res, `update task success.`, taskArray);
+    Response.successResponse(res, `Update task success.`, taskArray);
   } catch (err) {
     console.log(err);
     next(err);
@@ -109,7 +110,6 @@ async function deleteOne(req, res, next) {
     if (taskIndex === -1) {
       return Response.errorResponse(res, "Task not found");
     }
-    console.log(121212, taskIndex, taskArray);
     taskArray.splice(taskIndex, 1);
 
     const msg = "Delete task success!!";
